@@ -12,32 +12,40 @@ import com.b.simple.design.model.customer.Product;
 public class CustomerBOImpl implements CustomerBO {
 
 	@Override
-	public Amount getCustomerProductsSum(List<Product> products)
-			throws DifferentCurrenciesException {
-		BigDecimal temp = BigDecimal.ZERO;
+	public Amount getCustomerProductsSum(List<Product> products) throws DifferentCurrenciesException {
 
 		if (products.size() == 0)
-			return new AmountImpl(temp, Currency.EURO);
+			return createNewProduct(BigDecimal.ZERO, Currency.EURO);
 
-		// Throw Exception If Any of the product has a currency different from
-		// the first product
-		Currency firstProductCurrency = products.get(0).getAmount()
-				.getCurrency();
-
-		for (Product product : products) {
-			boolean currencySameAsFirstProduct = product.getAmount()
-					.getCurrency().equals(firstProductCurrency);
-			if (!currencySameAsFirstProduct) {
-				throw new DifferentCurrenciesException();
-			}
+		Currency firstProductCurrency = getFirstProductCurrency(products);
+		if (!doAllProductsHaveSameCurrency(products, firstProductCurrency)) {
+			throw new DifferentCurrenciesException();
 		}
 
-		// Calculate Sum of Products
-		for (Product product : products) {
-			temp = temp.add(product.getAmount().getValue());
-		}
-		
-		// Create new product
-		return new AmountImpl(temp, firstProductCurrency);
+		BigDecimal sumOfProducts = calculateSumOfProducts(products);
+		return createNewProduct(sumOfProducts, firstProductCurrency);
 	}
+
+	private AmountImpl createNewProduct(BigDecimal sumOfProducts, Currency firstProductCurrency) {
+		return new AmountImpl(sumOfProducts, firstProductCurrency);
+	}
+
+	private BigDecimal calculateSumOfProducts(List<Product> products) {
+
+		return products.stream()
+				.map(product -> product.getAmount().getValue())
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	private Currency getFirstProductCurrency(List<Product> products) {
+		return products.get(0).getAmount().getCurrency();
+	}
+
+	public boolean doAllProductsHaveSameCurrency(List<Product> products, Currency firstProductCurrency)
+			throws DifferentCurrenciesException {
+		return products.stream().map(product -> product.getAmount().getCurrency())
+				.allMatch(currency -> currency.equals(firstProductCurrency));
+
+	}
+
 }
