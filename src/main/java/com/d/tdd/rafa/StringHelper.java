@@ -13,4 +13,17 @@ public class StringHelper {
 		return firstTwoCharacters.replaceAll("A", "") + restOfTheString;
 	}
 
+	public boolean areFirstTwoCharactersSameAsLastTwo(String string) {
+
+		int length = string.length();
+		if (length < 2) {
+			return false;
+		}
+
+		String firstTwoCharacters = string.substring(0, 2);
+		String lastTwoCharacters = string.substring(length - 2);
+
+		return firstTwoCharacters.equals(lastTwoCharacters);
+	}
+
 }
