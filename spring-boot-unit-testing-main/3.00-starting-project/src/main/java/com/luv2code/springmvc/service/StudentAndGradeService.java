@@ -5,9 +5,12 @@ import java.util.Optional;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.luv2code.springmvc.models.CollegeStudent;
+import com.luv2code.springmvc.models.MathGrade;
+import com.luv2code.springmvc.repository.MathGradesDao;
 import com.luv2code.springmvc.repository.StudentDao;
 
 @Service
@@ -17,20 +20,27 @@ public class StudentAndGradeService {
 	@Autowired
 	private StudentDao studentDao;
 
+	@Autowired
+	private MathGradesDao mathGradesDao;
+
+	@Autowired
+	@Qualifier("mathGrades")
+	private MathGrade mathGrade;
+
 	public void createStudent(String firstName, String lastName, String emailAddress) {
 		CollegeStudent student = new CollegeStudent(firstName, lastName, emailAddress);
 		student.setId(0);
 		studentDao.save(student);
 	}
 
-	public boolean checkIfStudentIsNull(int id) {
+	public boolean checkIfStudentIsNotNull(int id) {
 		Optional<CollegeStudent> student = studentDao.findById(id);
 		return student.isPresent();
 	}
 
 	public void deleteStudent(int id) {
 
-		if (checkIfStudentIsNull(id)) {
+		if (checkIfStudentIsNotNull(id)) {
 			studentDao.deleteById(id);
 		}
 
@@ -39,6 +49,25 @@ public class StudentAndGradeService {
 	public Iterable<CollegeStudent> getGradebook() {
 
 		return studentDao.findAll();
+	}
+
+	public boolean createGrade(double grade, int id, String gradeType) {
+
+		if (!checkIfStudentIsNotNull(id)) {
+			return false;
+		}
+
+		if (grade >= 0 && grade <= 100) {
+			if ("math".equals(gradeType)) {
+				mathGrade.setId(0);
+				mathGrade.setGrade(grade);
+				mathGrade.setStudentId(id);
+				mathGradesDao.save(mathGrade);
+				return true;
+			}
+		}
+		return false;
+
 	}
 
 }

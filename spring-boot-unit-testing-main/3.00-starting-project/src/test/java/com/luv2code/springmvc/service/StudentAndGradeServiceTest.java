@@ -22,6 +22,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 
 import com.luv2code.springmvc.models.CollegeStudent;
+import com.luv2code.springmvc.models.MathGrade;
+import com.luv2code.springmvc.repository.MathGradesDao;
 import com.luv2code.springmvc.repository.StudentDao;
 
 @TestPropertySource("/application.properties")
@@ -35,6 +37,9 @@ public class StudentAndGradeServiceTest {
 
 	@Autowired
 	private StudentDao studentDao;
+	
+	@Autowired
+	private MathGradesDao mathGradesDao;
 
 	@Autowired
 	private JdbcTemplate jdbc;
@@ -96,9 +101,21 @@ public class StudentAndGradeServiceTest {
 	@Test
 	public void is_student_null_check() {
 
-		assertTrue(studentService.checkIfStudentIsNull(1));
+		assertTrue(studentService.checkIfStudentIsNotNull(1));
 
-		assertFalse(studentService.checkIfStudentIsNull(0));
+		assertFalse(studentService.checkIfStudentIsNotNull(0));
+	}
+
+	@Test
+	public void create_grade_service() {
+
+		// Create the grade
+		assertTrue(studentService.createGrade(80.5, 1, "math"));
+		// Get all grades with studentId
+		Iterable<MathGrade> mathGrades = mathGradesDao.findGradeByStudentId(1);
+		// Verify there is grades
+		assertTrue(mathGrades.iterator().hasNext());
+
 	}
 
 }
