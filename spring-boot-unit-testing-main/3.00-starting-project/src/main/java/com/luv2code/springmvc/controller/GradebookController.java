@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.luv2code.springmvc.models.CollegeStudent;
 import com.luv2code.springmvc.models.Gradebook;
@@ -34,6 +35,12 @@ public class GradebookController {
 
 	@GetMapping("/studentInformation/{id}")
 	public String studentInformation(@PathVariable int id, Model m) {
+
+		if (!studentService.checkIfStudentIsNotNull(id)) {
+			return "error";
+		}
+		studentService.configureStudentInformationModel(id, m);
+
 		return "studentInformation";
 	}
 
@@ -50,15 +57,50 @@ public class GradebookController {
 
 	@GetMapping("/delete/student/{id}")
 	public String deleteStudent(@PathVariable int id, Model m) {
-		
+
 		if (!studentService.checkIfStudentIsNotNull(id)) {
 			return "error";
 		}
-		
+
 		studentService.deleteStudent(id);
 		Iterable<CollegeStudent> collegeStudents = studentService.getGradebook();
 		m.addAttribute("students", collegeStudents);
 		return "index";
+	}
+
+	@PostMapping("/grades")
+	public String createGrade(@RequestParam("grade") double grade, @RequestParam("gradeType") String gradeType,
+			@RequestParam("studentId") int id, Model m) {
+
+		if (!studentService.checkIfStudentIsNotNull(id)) {
+			return "error";
+		}
+
+		boolean success = studentService.createGrade(grade, id, gradeType);
+
+		if (!success) {
+			return "error";
+		}
+
+		studentService.configureStudentInformationModel(id, m);
+
+		return "studentInformation";
+
+	}
+
+	@GetMapping("/grades/{id}/{gradeType}")
+	public String deleteGrade(@PathVariable int id, @PathVariable String gradeType, Model m) {
+		
+		int studentId = studentService.deleteGrade(id, gradeType);
+		
+		if (0 == studentId) {
+			return "error";
+		}
+		
+		studentService.configureStudentInformationModel(studentId, m);
+
+		return "studentInformation";
+
 	}
 
 }
